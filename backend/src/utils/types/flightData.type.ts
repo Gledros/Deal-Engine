@@ -1,7 +1,7 @@
 export type flightDataType = {
   origin: string;
   destination: string;
-  airline: number;
+  airline: string;
   flight_num: number;
   origin_iata_code: string;
   origin_name: string;
@@ -11,4 +11,10 @@ export type flightDataType = {
   destination_name: string;
   destination_latitude: number;
   destination_longitude: number;
+};
+
+export type airportDataType = {
+  IATA_code: string;
+  latitude: number;
+  longitude: number;
 };
