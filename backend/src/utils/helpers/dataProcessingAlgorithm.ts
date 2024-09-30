@@ -1,9 +1,12 @@
 import * as fs from 'fs';
 import { parse } from 'csv-parse';
 import { airportDataType, flightDataType } from '../types';
+import weatherAPI from './weatherAPI.class';
+import { emitter } from './eventEmitter.class';
 
 const fileName = 'test-data';
 const filePath = `src/${fileName}.csv`;
+const eventEmitter = new emitter();
 
 let data: flightDataType[] = [];
 let airports: airportDataType[] = [];
@@ -19,7 +22,10 @@ const processAirport = (flightData: flightDataType) => {
     ({ IATA_code }) => IATA_code === flightData.origin_iata_code
   );
 
-  if (!airport) airports.push(airportOriginData);
+  if (!airport) {
+    airports.push(airportOriginData);
+    eventEmitter.emit('newAirport', airportOriginData);
+  }
 
   const airportDestinationData: airportDataType = {
     IATA_code: flightData.destination_iata_code,
@@ -31,10 +37,15 @@ const processAirport = (flightData: flightDataType) => {
     ({ IATA_code }) => IATA_code === flightData.destination_iata_code
   );
 
-  if (!airport) airports.push(airportDestinationData);
+  if (!airport) {
+    airports.push(airportDestinationData);
+    eventEmitter.emit('newAirport', airportDestinationData);
+  }
 };
 
 export const processData = () => {
+  weatherAPI.startRequestingData(eventEmitter);
+
   fs.createReadStream(filePath)
     .pipe(parse({ delimiter: ',', from_line: 2 }))
     .on('data', (row) => {
@@ -59,9 +70,9 @@ export const processData = () => {
     })
     .on('end', function () {
       console.log('finished');
-      console.log(data[0]);
+      // console.log(data[0]);
       // console.log(data.length);
-      console.log(airports);
+      // console.log(airports);
       // console.log(airports.length);
     })
     .on('error', (error) => {
