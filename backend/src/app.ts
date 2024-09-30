@@ -5,6 +5,9 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import 'express-async-errors';
 import * as rfs from 'rotating-file-stream';
+import { processData } from './utils/helpers/';
+
+processData();
 
 dotenv.config();
 
