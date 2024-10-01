@@ -57,10 +57,13 @@ class weatherAPI {
         longitude: airportData.longitude,
         hourly: [
           'temperature_2m',
+          'apparent_temperature',
+          'precipitation_probability',
           'precipitation',
           'weather_code',
           'cloud_cover',
-          'cloud_cover_low'
+          'cloud_cover_low',
+          'visibility'
         ],
         timezone: 'auto',
         forecast_days: 1
@@ -105,10 +108,13 @@ class weatherAPI {
 
       const weather: IWeatherForecast = {
         temperature: hourly.variables(0)!.valuesArray()!,
-        precipitation: hourly.variables(1)!.valuesArray()!,
-        weatherCode: hourly.variables(2)!.valuesArray()!,
-        cloudCover: hourly.variables(3)!.valuesArray()!,
-        cloudCoverLow: hourly.variables(4)!.valuesArray()!
+        apparentTemperature: hourly.variables(1)!.valuesArray()!,
+        precipitationProbability: hourly.variables(2)!.valuesArray()!,
+        precipitation: hourly.variables(3)!.valuesArray()!,
+        weatherCode: hourly.variables(4)!.valuesArray()!,
+        cloudCover: hourly.variables(5)!.valuesArray()!,
+        cloudCoverLow: hourly.variables(6)!.valuesArray()!,
+        visibility: hourly.variables(7)!.valuesArray()!
       };
 
       const data: IAirportData = {
