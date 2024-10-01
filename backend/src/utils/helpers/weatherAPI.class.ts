@@ -50,8 +50,7 @@ class weatherAPI {
   }
 
   public startRequestingData = async (eventEmitter: emitter) => {
-    // TODO: change .once for .on
-    eventEmitter.once('newAirport', async (airportData: IAirportData) => {
+    eventEmitter.on('newAirport', async (airportData: IAirportData) => {
       const params = {
         latitude: airportData.latitude,
         longitude: airportData.longitude,
