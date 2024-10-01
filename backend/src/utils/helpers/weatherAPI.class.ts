@@ -1,4 +1,5 @@
-import { Airport, IAirportData, IWeatherForecast } from '../interfaces';
+import { createAirport, getAirportByIATA_code } from '../../api/airport';
+import { IAirportData, IWeatherForecast } from '../interfaces';
 import { emitter } from './eventEmitter.class';
 import { fetchWeatherApi } from 'openmeteo';
 
@@ -51,7 +52,8 @@ class weatherAPI {
 
   public startRequestingData = async (eventEmitter: emitter) => {
     eventEmitter.on('newAirport', async (airportData: IAirportData) => {
-      const query = await Airport.findOne({ IATA_code: airportData.IATA_code }).exec();
+      const query = await getAirportByIATA_code(airportData.IATA_code);
+
       let data: IAirportData;
 
       if (!query) {
@@ -102,8 +104,7 @@ class weatherAPI {
 
         this.airports.push(data);
 
-        const newAirport = new Airport(data);
-        const insertedAirport = await newAirport.save();
+        const insertedAirport = createAirport(data);
 
         console.log(insertedAirport);
       } else {

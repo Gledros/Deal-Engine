@@ -1,4 +1,4 @@
-import express, { Response } from 'express';
+import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import 'express-async-errors';
 import * as rfs from 'rotating-file-stream';
 import mongoose from 'mongoose';
+import router from './api';
 import { processData } from './utils/helpers/';
 
 processData();
@@ -36,9 +37,7 @@ app.use(cors());
 app.use(helmet());
 app.use(express.json());
 
-app.get('/', (_, res: Response) => {
-  res.send('Home');
-});
+app.use('/', router);
 
 const init = async () => {
   try {
