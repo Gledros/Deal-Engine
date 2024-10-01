@@ -1,4 +1,4 @@
-import { airportDataType } from '../types';
+import { Airport, IAirportData, IWeatherForecast } from '../interfaces';
 import { emitter } from './eventEmitter.class';
 import { fetchWeatherApi } from 'openmeteo';
 
@@ -7,7 +7,7 @@ class weatherAPI {
 
   private static maxConnections: number = 10;
   private currentConnections: number = 0;
-  private airports: airportDataType[] = [];
+  private airports: IAirportData[] = [];
 
   // Weather interpretation codes defined by the WMO
   private wmoCodes: Map<number, string> = new Map([
@@ -51,7 +51,7 @@ class weatherAPI {
 
   public startRequestingData = async (eventEmitter: emitter) => {
     // TODO: change .once for .on
-    eventEmitter.once('newAirport', async (airportData: airportDataType) => {
+    eventEmitter.once('newAirport', async (airportData: IAirportData) => {
       const params = {
         latitude: airportData.latitude,
         longitude: airportData.longitude,
@@ -85,43 +85,58 @@ class weatherAPI {
 
       const hourly = response.hourly()!;
 
+      // console.log(hourly.variables(0)!.valuesArray()!);
+
       // Note: The order of weather variables in the URL query and the indices below need to match!
-      const weatherData = {
-        hourly: {
-          time: range(
-            Number(hourly.time()),
-            Number(hourly.timeEnd()),
-            hourly.interval()
-          ).map((t) => new Date((t + utcOffsetSeconds) * 1000)),
-          temperature2m: hourly.variables(0)!.valuesArray()!,
-          precipitation: hourly.variables(1)!.valuesArray()!,
-          weatherCode: hourly.variables(2)!.valuesArray()!,
-          cloudCover: hourly.variables(3)!.valuesArray()!,
-          cloudCoverLow: hourly.variables(4)!.valuesArray()!
-        }
+      // const weatherData = {
+      //   hourly: {
+      //     time: range(
+      //       Number(hourly.time()),
+      //       Number(hourly.timeEnd()),
+      //       hourly.interval()
+      //     ).map((t) => new Date((t + utcOffsetSeconds) * 1000)),
+      //     temperature2m: hourly.variables(0)!.valuesArray()!,
+      //     precipitation: hourly.variables(1)!.valuesArray()!,
+      //     weatherCode: hourly.variables(2)!.valuesArray()!,
+      //     cloudCover: hourly.variables(3)!.valuesArray()!,
+      //     cloudCoverLow: hourly.variables(4)!.valuesArray()!
+      //   }
+      // };
+
+      const weather: IWeatherForecast = {
+        temperature: hourly.variables(0)!.valuesArray()!,
+        precipitation: hourly.variables(1)!.valuesArray()!,
+        weatherCode: hourly.variables(2)!.valuesArray()!,
+        cloudCover: hourly.variables(3)!.valuesArray()!,
+        cloudCoverLow: hourly.variables(4)!.valuesArray()!
       };
 
-      // `weatherData` now contains a simple structure with arrays for datetime and weather data
-      for (let i = 0; i < weatherData.hourly.time.length; i++) {
-        console.log(
-          weatherData.hourly.time[i]
-            .toISOString()
-            .substring(11)
-            .replace(/:00.000Z/, ' hr ->'),
-          weatherData.hourly.temperature2m[i].toFixed(2) + ' °C ->',
-          weatherData.hourly.precipitation[i].toFixed(2) + ' precipitation ->',
-          this.wmoCodes.get(weatherData.hourly.weatherCode[i]) + ' weather ->',
-          weatherData.hourly.cloudCover[i] + ' cloud cover total ->',
-          weatherData.hourly.cloudCoverLow[i] + ' cloud cover low'
-        );
-      }
-
-      const data = {
+      const data: IAirportData = {
         ...airportData,
-        weatherForecast: undefined //TODO: to fill with the retrieved data
+        weatherForecast: weather
       };
 
       this.airports.push(data);
+
+      const newAirport = new Airport(data);
+      const insertedAirport = await newAirport.save();
+
+      console.log(insertedAirport);
+
+      // `weatherData` now contains a simple structure with arrays for datetime and weather data
+      // for (let i = 0; i < weatherData.hourly.time.length; i++) {
+      //   console.log(
+      //     weatherData.hourly.time[i]
+      //       .toISOString()
+      //       .substring(11)
+      //       .replace(/:00.000Z/, ' hr ->'),
+      //     weatherData.hourly.temperature2m[i].toFixed(2) + ' °C ->',
+      //     weatherData.hourly.precipitation[i].toFixed(2) + ' precipitation ->',
+      //     this.wmoCodes.get(weatherData.hourly.weatherCode[i]) + ' weather ->',
+      //     weatherData.hourly.cloudCover[i] + ' cloud cover total ->',
+      //     weatherData.hourly.cloudCoverLow[i] + ' cloud cover low'
+      //   );
+      // }
     });
   };
 }

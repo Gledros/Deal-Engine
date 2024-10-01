@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import { parse } from 'csv-parse';
-import { airportDataType, flightDataType } from '../types';
+import { IAirportData, IFlightData } from '../interfaces';
 import weatherAPI from './weatherAPI.class';
 import { emitter } from './eventEmitter.class';
 
@@ -8,11 +8,11 @@ const fileName = 'test-data';
 const filePath = `src/${fileName}.csv`;
 const eventEmitter = new emitter();
 
-let data: flightDataType[] = [];
-let airports: airportDataType[] = [];
+let data: IFlightData[] = [];
+let airports: IAirportData[] = [];
 
-const processAirport = (flightData: flightDataType) => {
-  const airportOriginData: airportDataType = {
+const processAirport = (flightData: IFlightData) => {
+  const airportOriginData: IAirportData = {
     IATA_code: flightData.origin_iata_code,
     latitude: flightData.origin_latitude,
     longitude: flightData.origin_longitude,
@@ -28,7 +28,7 @@ const processAirport = (flightData: flightDataType) => {
     eventEmitter.emit('newAirport', airportOriginData);
   }
 
-  const airportDestinationData: airportDataType = {
+  const airportDestinationData: IAirportData = {
     IATA_code: flightData.destination_iata_code,
     latitude: flightData.destination_latitude,
     longitude: flightData.destination_longitude,
@@ -45,13 +45,13 @@ const processAirport = (flightData: flightDataType) => {
   }
 };
 
-export const processData = () => {
+export const processData = async () => {
   weatherAPI.startRequestingData(eventEmitter);
 
   fs.createReadStream(filePath)
     .pipe(parse({ delimiter: ',', from_line: 2 }))
     .on('data', (row) => {
-      const flightData: flightDataType = {
+      const flightData: IFlightData = {
         origin: row[0],
         destination: row[1],
         airline: row[2],
@@ -76,6 +76,7 @@ export const processData = () => {
       // console.log(data.length);
       // console.log(airports);
       // console.log(airports.length);
+      eventEmitter.removeAllListeners();
     })
     .on('error', (error) => {
       console.log(error.message);

@@ -1,4 +1,4 @@
-export type flightDataType = {
+export interface IFlightData {
   origin: string;
   destination: string;
   airline: string;
@@ -11,4 +11,4 @@ export type flightDataType = {
   destination_name: string;
   destination_latitude: number;
   destination_longitude: number;
-};
+}
