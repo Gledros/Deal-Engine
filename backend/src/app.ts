@@ -35,7 +35,7 @@ if (env == 'dev' && process.env.LOG_FILE)
   app.use(morgan(process.env.LOG_FORMAT || 'dev'));
 
 app.use(cors());
-app.use(helmet());
+// app.use(helmet()); // TODO, remove unsafe-inline css
 app.use(express.json());
 
 app.use('/api/v1', router);
