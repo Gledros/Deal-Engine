@@ -5,6 +5,7 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import 'express-async-errors';
 import * as rfs from 'rotating-file-stream';
+import mongoose from 'mongoose';
 import { processData } from './utils/helpers/';
 
 processData();
@@ -39,8 +40,17 @@ app.get('/', (_, res: Response) => {
   res.send('Home');
 });
 
-app.listen(port, () => {
-  console.log(`Server started at http://localhost:${port}`);
-});
+const init = async () => {
+  try {
+    await mongoose.connect(`${process.env.MONGO_URI}/${process.env.MONGO_DB}`);
+
+    app.listen(port, () => console.log(`Server started at http://localhost:${port}`));
+  } catch (error) {
+    console.error(error);
+    process.exit(1);
+  }
+};
+
+init();
 
 export default app;
