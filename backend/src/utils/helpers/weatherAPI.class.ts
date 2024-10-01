@@ -51,85 +51,105 @@ class weatherAPI {
 
   public startRequestingData = async (eventEmitter: emitter) => {
     eventEmitter.on('newAirport', async (airportData: IAirportData) => {
-      const params = {
-        latitude: airportData.latitude,
-        longitude: airportData.longitude,
-        hourly: [
-          'temperature_2m',
-          'apparent_temperature',
-          'precipitation_probability',
-          'precipitation',
-          'weather_code',
-          'cloud_cover',
-          'cloud_cover_low',
-          'visibility'
-        ],
-        timezone: 'auto',
-        forecast_days: 1
-      };
-
-      const url = 'https://api.open-meteo.com/v1/forecast';
-      const responses = await fetchWeatherApi(url, params);
-
-      const range = (start: number, stop: number, step: number) =>
-        Array.from({ length: (stop - start) / step }, (_, i) => start + i * step);
-
-      const response = responses[0];
-      const utcOffsetSeconds = response.utcOffsetSeconds();
-      const hourly = response.hourly()!;
-
-      const weather: IWeatherForecast = {
-        temperature: hourly.variables(0)!.valuesArray()!,
-        apparentTemperature: hourly.variables(1)!.valuesArray()!,
-        precipitationProbability: hourly.variables(2)!.valuesArray()!,
-        precipitation: hourly.variables(3)!.valuesArray()!,
-        weatherCode: hourly.variables(4)!.valuesArray()!,
-        cloudCover: hourly.variables(5)!.valuesArray()!,
-        cloudCoverLow: hourly.variables(6)!.valuesArray()!,
-        visibility: hourly.variables(7)!.valuesArray()!
-      };
-
-      const data: IAirportData = {
-        ...airportData,
-        weatherForecast: weather
-      };
-
-      this.airports.push(data);
-
-      const query = await Airport.findOne({ IATA_code: data.IATA_code }).exec();
+      const query = await Airport.findOne({ IATA_code: airportData.IATA_code }).exec();
+      let data: IAirportData;
 
       if (!query) {
+        const params = {
+          latitude: airportData.latitude,
+          longitude: airportData.longitude,
+          hourly: [
+            'temperature_2m',
+            'apparent_temperature',
+            'precipitation_probability',
+            'precipitation',
+            'weather_code',
+            'cloud_cover',
+            'cloud_cover_low',
+            'visibility'
+          ],
+          timezone: 'auto',
+          forecast_days: 1
+        };
+
+        const url = 'https://api.open-meteo.com/v1/forecast';
+        const responses = await fetchWeatherApi(url, params);
+
+        const response = responses[0];
+        const hourly = response.hourly()!;
+
+        const weather: IWeatherForecast = {
+          hourlyData: {
+            utcOffsetSeconds: response.utcOffsetSeconds(),
+            time: Number(hourly.time()),
+            timeEnd: Number(hourly.timeEnd()),
+            interval: hourly.interval()
+          },
+          temperature: hourly.variables(0)!.valuesArray()!,
+          apparentTemperature: hourly.variables(1)!.valuesArray()!,
+          precipitationProbability: hourly.variables(2)!.valuesArray()!,
+          precipitation: hourly.variables(3)!.valuesArray()!,
+          weatherCode: hourly.variables(4)!.valuesArray()!,
+          cloudCover: hourly.variables(5)!.valuesArray()!,
+          cloudCoverLow: hourly.variables(6)!.valuesArray()!,
+          visibility: hourly.variables(7)!.valuesArray()!
+        };
+
+        data = {
+          ...airportData,
+          weatherForecast: weather
+        };
+
+        this.airports.push(data);
+
         const newAirport = new Airport(data);
         const insertedAirport = await newAirport.save();
 
         console.log(insertedAirport);
-      } else console.log('skipping insertion');
-
-      console.log(
-        `Airport: ${data.IATA_code} Lat: ${data.latitude} Lon: ${data.longitude}`
-      );
-
-      for (let i = 0; i < weather.temperature.length; i++) {
-        console.log(
-          range(Number(hourly.time()), Number(hourly.timeEnd()), hourly.interval())
-            .map((t) => new Date((t + utcOffsetSeconds) * 1000))
-            [i].toISOString()
-            .substring(11)
-            .replace(/:00.000Z/, ' hr ->'),
-          weather.temperature[i].toFixed(2) + ' °C ->',
-          weather.apparentTemperature[i].toFixed(2) + ' °C ->',
-          weather.precipitationProbability[i].toFixed(2) +
-            ' % precipitation probability ->',
-          weather.precipitation[i].toFixed(2) + ' mm precipitation ->',
-          this.wmoCodes.get(weather.weatherCode[i]) + ' weather ->',
-          weather.cloudCover[i] + ' % cloud cover total ->',
-          weather.cloudCoverLow[i] + ' % cloud cover low ->',
-          weather.visibility[i].toLocaleString('en-US') + ' m visibility'
-        );
+      } else {
+        console.log('skipping insertion');
+        data = query;
       }
 
-      console.log('\n');
+      this.printToConsole(data);
     });
+  };
+
+  printToConsole = (data: IAirportData) => {
+    const range = (start: number, stop: number, step: number) =>
+      Array.from({ length: (stop - start) / step }, (_, i) => start + i * step);
+
+    console.log(
+      `Airport: ${data.IATA_code} Lat: ${data.latitude} Lon: ${data.longitude}`
+    );
+
+    for (let i = 0; i < 23; i++) {
+      console.log(
+        range(
+          data.weatherForecast!.hourlyData.time,
+          data.weatherForecast!.hourlyData.timeEnd,
+          data.weatherForecast!.hourlyData.interval
+        )
+          .map(
+            (t) =>
+              new Date((t + data.weatherForecast!.hourlyData.utcOffsetSeconds) * 1000)
+          )
+          [i].toISOString()
+          .substring(11)
+          .replace(/:00.000Z/, ' hr ->'),
+        data.weatherForecast?.temperature[i].toFixed(2) + ' °C ->',
+        data.weatherForecast?.apparentTemperature[i].toFixed(2) + ' °C ->',
+        data.weatherForecast?.precipitationProbability[i].toFixed(2) +
+          ' % precipitation probability ->',
+        data.weatherForecast?.precipitation[i].toFixed(2) + ' mm precipitation ->',
+        this.wmoCodes.get(data.weatherForecast!.weatherCode[i]) + ' weather ->',
+        data.weatherForecast?.cloudCover[i] + ' % cloud cover total ->',
+        data.weatherForecast?.cloudCoverLow[i] + ' % cloud cover low ->',
+        data.weatherForecast?.visibility[i].toLocaleString('en-US') + ' m visibility'
+      );
+    }
+
+    console.log('\n');
   };
 }
 

@@ -1,4 +1,10 @@
 export interface IWeatherForecast {
+  hourlyData: {
+    utcOffsetSeconds: number;
+    time: number;
+    timeEnd: number;
+    interval: number;
+  };
   temperature: Float32Array;
   apparentTemperature: Float32Array;
   precipitationProbability: Float32Array;
