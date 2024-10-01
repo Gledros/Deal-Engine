@@ -72,39 +72,12 @@ class weatherAPI {
       const url = 'https://api.open-meteo.com/v1/forecast';
       const responses = await fetchWeatherApi(url, params);
 
-      // Helper function to form time ranges
       const range = (start: number, stop: number, step: number) =>
         Array.from({ length: (stop - start) / step }, (_, i) => start + i * step);
 
-      // Process first location. Add a for-loop for multiple locations or weather models
       const response = responses[0];
-
-      // Attributes for timezone and location
       const utcOffsetSeconds = response.utcOffsetSeconds();
-      // const timezone = response.timezone();
-      // const timezoneAbbreviation = response.timezoneAbbreviation();
-      // const latitude = response.latitude();
-      // const longitude = response.longitude();
-
       const hourly = response.hourly()!;
-
-      // console.log(hourly.variables(0)!.valuesArray()!);
-
-      // Note: The order of weather variables in the URL query and the indices below need to match!
-      // const weatherData = {
-      //   hourly: {
-      //     time: range(
-      //       Number(hourly.time()),
-      //       Number(hourly.timeEnd()),
-      //       hourly.interval()
-      //     ).map((t) => new Date((t + utcOffsetSeconds) * 1000)),
-      //     temperature2m: hourly.variables(0)!.valuesArray()!,
-      //     precipitation: hourly.variables(1)!.valuesArray()!,
-      //     weatherCode: hourly.variables(2)!.valuesArray()!,
-      //     cloudCover: hourly.variables(3)!.valuesArray()!,
-      //     cloudCoverLow: hourly.variables(4)!.valuesArray()!
-      //   }
-      // };
 
       const weather: IWeatherForecast = {
         temperature: hourly.variables(0)!.valuesArray()!,
@@ -133,20 +106,30 @@ class weatherAPI {
         console.log(insertedAirport);
       } else console.log('skipping insertion');
 
-      // `weatherData` now contains a simple structure with arrays for datetime and weather data
-      // for (let i = 0; i < weatherData.hourly.time.length; i++) {
-      //   console.log(
-      //     weatherData.hourly.time[i]
-      //       .toISOString()
-      //       .substring(11)
-      //       .replace(/:00.000Z/, ' hr ->'),
-      //     weatherData.hourly.temperature2m[i].toFixed(2) + ' °C ->',
-      //     weatherData.hourly.precipitation[i].toFixed(2) + ' precipitation ->',
-      //     this.wmoCodes.get(weatherData.hourly.weatherCode[i]) + ' weather ->',
-      //     weatherData.hourly.cloudCover[i] + ' cloud cover total ->',
-      //     weatherData.hourly.cloudCoverLow[i] + ' cloud cover low'
-      //   );
-      // }
+      console.log(
+        `Airport: ${data.IATA_code} Lat: ${data.latitude} Lon: ${data.longitude}`
+      );
+
+      for (let i = 0; i < weather.temperature.length; i++) {
+        console.log(
+          range(Number(hourly.time()), Number(hourly.timeEnd()), hourly.interval())
+            .map((t) => new Date((t + utcOffsetSeconds) * 1000))
+            [i].toISOString()
+            .substring(11)
+            .replace(/:00.000Z/, ' hr ->'),
+          weather.temperature[i].toFixed(2) + ' °C ->',
+          weather.apparentTemperature[i].toFixed(2) + ' °C ->',
+          weather.precipitationProbability[i].toFixed(2) +
+            ' % precipitation probability ->',
+          weather.precipitation[i].toFixed(2) + ' mm precipitation ->',
+          this.wmoCodes.get(weather.weatherCode[i]) + ' weather ->',
+          weather.cloudCover[i] + ' % cloud cover total ->',
+          weather.cloudCoverLow[i] + ' % cloud cover low ->',
+          weather.visibility[i].toLocaleString('en-US') + ' m visibility'
+        );
+      }
+
+      console.log('\n');
     });
   };
 }
