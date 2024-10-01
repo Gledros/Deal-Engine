@@ -8,6 +8,7 @@ import * as rfs from 'rotating-file-stream';
 import mongoose from 'mongoose';
 import router from './api';
 import { processData } from './utils/helpers/';
+import path from 'path';
 
 processData();
 
@@ -38,6 +39,14 @@ app.use(helmet());
 app.use(express.json());
 
 app.use('/', router);
+
+const frontendPath = '../../frontend/dist/frontend/browser';
+
+app.use(express.static(path.join(__dirname, frontendPath)));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, frontendPath, '/index.html'));
+});
 
 const init = async () => {
   try {
