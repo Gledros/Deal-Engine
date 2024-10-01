@@ -38,7 +38,7 @@ app.use(cors());
 app.use(helmet());
 app.use(express.json());
 
-app.use('/', router);
+app.use('/api/v1', router);
 
 const frontendPath = '../../frontend/dist/frontend/browser';
 
