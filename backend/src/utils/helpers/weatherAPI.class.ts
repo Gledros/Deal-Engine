@@ -118,10 +118,14 @@ class weatherAPI {
 
       this.airports.push(data);
 
-      const newAirport = new Airport(data);
-      const insertedAirport = await newAirport.save();
+      const query = await Airport.findOne({ IATA_code: data.IATA_code }).exec();
 
-      console.log(insertedAirport);
+      if (!query) {
+        const newAirport = new Airport(data);
+        const insertedAirport = await newAirport.save();
+
+        console.log(insertedAirport);
+      } else console.log('skipping insertion');
 
       // `weatherData` now contains a simple structure with arrays for datetime and weather data
       // for (let i = 0; i < weatherData.hourly.time.length; i++) {
