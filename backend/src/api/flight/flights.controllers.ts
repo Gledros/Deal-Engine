@@ -11,8 +11,8 @@ export const getFlightsController = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const airports: IFlightData[] | null = await getAllFlights();
-  res.status(200).json({ airports });
+  const flights: IFlightData[] | null = await getAllFlights();
+  res.status(200).json({ flights });
 };
 
 export const getFlightsByOriginController = async (
