@@ -15,7 +15,8 @@ const processAirport = (flightData: flightDataType) => {
   const airportOriginData: airportDataType = {
     IATA_code: flightData.origin_iata_code,
     latitude: flightData.origin_latitude,
-    longitude: flightData.origin_longitude
+    longitude: flightData.origin_longitude,
+    weatherForecast: undefined
   };
 
   let airport = airports.find(
@@ -30,7 +31,8 @@ const processAirport = (flightData: flightDataType) => {
   const airportDestinationData: airportDataType = {
     IATA_code: flightData.destination_iata_code,
     latitude: flightData.destination_latitude,
-    longitude: flightData.destination_longitude
+    longitude: flightData.destination_longitude,
+    weatherForecast: undefined
   };
 
   airport = airports.find(

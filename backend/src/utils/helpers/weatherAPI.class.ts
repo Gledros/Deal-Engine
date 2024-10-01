@@ -118,7 +118,7 @@ class weatherAPI {
 
       const data = {
         ...airportData,
-        weatherForecast: {} //TODO: to fill with the retrieved data
+        weatherForecast: undefined //TODO: to fill with the retrieved data
       };
 
       this.airports.push(data);

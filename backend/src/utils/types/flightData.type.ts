@@ -12,9 +12,3 @@ export type flightDataType = {
   destination_latitude: number;
   destination_longitude: number;
 };
-
-export type airportDataType = {
-  IATA_code: string;
-  latitude: number;
-  longitude: number;
-};
