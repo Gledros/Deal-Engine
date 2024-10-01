@@ -3,12 +3,12 @@ import { parse } from 'csv-parse';
 import { IAirportData, IFlightData } from '../interfaces';
 import weatherAPI from './weatherAPI.class';
 import { emitter } from './eventEmitter.class';
+import { createFlight } from '../../api/flight';
 
 const fileName = 'test-data';
 const filePath = `src/${fileName}.csv`;
 const eventEmitter = new emitter();
 
-let data: IFlightData[] = [];
 let airports: IAirportData[] = [];
 
 const processAirport = (flightData: IFlightData) => {
@@ -68,14 +68,10 @@ export const processData = async () => {
 
       processAirport(flightData);
 
-      data.push(flightData);
+      createFlight(flightData);
     })
     .on('end', function () {
-      console.log('finished');
-      // console.log(data[0]);
-      // console.log(data.length);
-      // console.log(airports);
-      // console.log(airports.length);
+      console.log('finished processing csv data');
       eventEmitter.removeAllListeners();
     })
     .on('error', (error) => {
